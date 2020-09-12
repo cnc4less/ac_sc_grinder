@@ -37,33 +37,33 @@ static fix16_t inv_div[17] = {
 
 uint32_t truncated_mean(uint16_t *src, uint8_t count, fix16_t window)
 {
-    uint8_t idx = 0;
-
     // Count mean & sigma in one pass
     // https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-    idx = count;
     uint32_t s = 0;
     uint32_t s2 = 0;
-    while (idx)
+    for (uint8_t idx = count; idx > 0;)
     {
         uint16_t val = src[--idx];
         s += val;
         s2 += val * val;
     }
 
-    int mean = ((s + (count >> 1)) * inv_div[count]) >> 16;
+    // mean = (s + (count >> 1) / count;
+    int mean = fix16_mul(s + (count >> 1), inv_div[count]);
 
-    int sigma_square = (s2 - (s * s / count)) / (count - 1);
-    // quick & dirty multiply to win^2, when win is in fix16 format.
-    // we suppose win is 1..2, and sigma^2 - 24 bits max
-    int sigma_win_square = ((((window >> 8) * (window >> 8)) >> 12) * sigma_square) >> 4;
+    // sigma_square = (s2 - (s * s / count)) / (count - 1);
+    int sigma_square = fix16_mul(
+        s2 - fix16_mul(s * s, inv_div[count]),
+        inv_div[count - 1]
+    );
+
+    int sigma_win_square = fix16_mul(sigma_square, fix16_mul(window, window));
 
     // Drop big deviations and count mean for the rest
-    idx = count;
     int s_mean_filtered = 0;
-    int s_mean_filtered_cnt = 0;
+    uint8_t s_mean_filtered_cnt = 0;
 
-    while (idx)
+    for (uint8_t idx = count; idx > 0;)
     {
         int val = src[--idx];
 
@@ -77,5 +77,8 @@ uint32_t truncated_mean(uint16_t *src, uint8_t count, fix16_t window)
     // Protection from zero div. Should never happen
     if (!s_mean_filtered_cnt) return mean;
 
-    return ((s_mean_filtered + (s_mean_filtered_cnt >> 1)) * inv_div[s_mean_filtered_cnt]) >> 16;
+    return fix16_mul(
+        s_mean_filtered + (s_mean_filtered_cnt >> 1),
+        inv_div[s_mean_filtered_cnt]
+    );
 }

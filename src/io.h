@@ -66,7 +66,7 @@ public:
         //
 
         // Apply filters
-        uint16_t adc_voltage = (uint16_t)truncated_mean(adc_voltage_buf, ADC_FETCH_PER_TICK, F16(1.1));
+        uint16_t adc_voltage = 4095 - (uint16_t)truncated_mean(adc_voltage_buf, ADC_FETCH_PER_TICK, F16(1.1));
         uint16_t adc_current = (uint16_t)truncated_mean(adc_current_buf, ADC_FETCH_PER_TICK, F16(1.1));
         uint16_t adc_knob = (uint16_t)truncated_mean(adc_knob_buf, ADC_FETCH_PER_TICK, F16(1.1));
         uint16_t adc_v_refin = (uint16_t)truncated_mean(adc_v_refin_buf, ADC_FETCH_PER_TICK, F16(1.1));
@@ -86,6 +86,7 @@ public:
         // Vref - ADC reference voltage, equal to ADC supply voltage (~ 3.3v)
         // adc_vrefin = 1.2 / Vref * 4096
         fix16_t v_ref = fix16_div(F16(1.2), adc_v_refin << 4);
+        //fix16_t v_ref = F16(1.2);
 
         // maximum ADC input voltage - Vref
         // current = adc_current_norm * v_ref / cfg_shunt_resistance

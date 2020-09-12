@@ -9,6 +9,7 @@
 #include "io.h"
 #include "regulator.h"
 #include "calibrator/calibrator.h"
+#include "tim.h"
 
 // Note: update version tag to reset old data
 EepromEmu<EepromFlashDriver, 0x0001> eeprom;
@@ -38,6 +39,23 @@ int main()
     meter.configure();
 
     hal::start();
+
+    uint16_t debug_adc_voltage_buf[ADC_FETCH_PER_TICK];
+    uint16_t debug_adc_current_buf[ADC_FETCH_PER_TICK];
+    uint16_t debug_adc_knob_buf[ADC_FETCH_PER_TICK];
+    uint16_t debug_adc_v_refin_buf[ADC_FETCH_PER_TICK];
+
+    for (int i = 0; i < ADC_FETCH_PER_TICK; i++)
+    {
+        debug_adc_voltage_buf[i] = 1234;
+        debug_adc_current_buf[i] = 1234;
+        debug_adc_knob_buf[i] = 1234;
+        debug_adc_v_refin_buf[i] = 1234;
+    }
+
+    htim1.Instance->CNT = 0;
+    io.consume(debug_adc_voltage_buf, debug_adc_current_buf, debug_adc_knob_buf, debug_adc_v_refin_buf);
+    volatile int asdf = htim1.Instance->CNT;
 
     // Override loop in main.c to reduce patching
     while (1) {

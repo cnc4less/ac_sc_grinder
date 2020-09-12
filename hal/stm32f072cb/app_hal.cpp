@@ -32,8 +32,8 @@ static void adc_raw_data_load(uint32_t adc_data_offset)
 {
     for (int sample = 0; sample < ADC_FETCH_PER_TICK; sample++)
     {
-        adc_voltage_buf[sample] = ADCBuffer[adc_data_offset++];
         adc_current_buf[sample] = ADCBuffer[adc_data_offset++];
+        adc_voltage_buf[sample] = ADCBuffer[adc_data_offset++];
         adc_knob_buf[sample] = ADCBuffer[adc_data_offset++];
         adc_v_refin_buf[sample] = ADCBuffer[adc_data_offset++];
     }
@@ -67,23 +67,25 @@ void setup(void)
     MX_ADC_Init();
     MX_SPI2_Init();
     MX_TIM15_Init();
+    MX_TIM1_Init();
 
     triac_ignition_off();
 }
 
 
 void triac_ignition_on() {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_PIN_RESET);
 }
 void triac_ignition_off() {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_PIN_SET);
 }
 
 
 void start() {
     // Final hardware start: calibrate ADC & run cyclic DMA ops.
     HAL_ADCEx_Calibration_Start(&hadc);
-    HAL_ADC_Start_DMA(&hadc, (uint32_t*)ADCBuffer, ADC_FETCH_PER_TICK * ADC_CHANNELS_COUNT * 2);
+    //HAL_ADC_Start_DMA(&hadc, (uint32_t*)ADCBuffer, ADC_FETCH_PER_TICK * ADC_CHANNELS_COUNT * 2);
+    HAL_TIM_OC_Start(&htim1, TIM_CHANNEL_1);
 }
 
 }
